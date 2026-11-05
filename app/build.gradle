@@ -2,6 +2,15 @@ apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
 
+// Firebase 在 Android 5.0 (API 21) 及以上受支持，恢复 crashlytics / google-services 插件。
+// 注意：若 app/ 下没有 google-services.json（Firebase 控制台项目配置），请先注释掉这两行，
+// 否则 google-services 插件会在构建时报错；文件就位后取消注释即可。
+def firebaseConfigured = file("${projectDir}/google-services.json").exists()
+if (firebaseConfigured) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+}
+
 final Properties env = new Properties()
 file("${rootDir}/env.properties").withInputStream { env.load(it) }
 
@@ -33,8 +42,8 @@ android {
 
     defaultConfig {
         applicationId 'juniojsv.mtk.easy.su'
-        // Android 4.4.4 (KitKat, API 19)
-        minSdkVersion 19
+        // Android 5.0 (Lollipop, API 21)
+        minSdkVersion 21
         compileSdk 34
         versionCode 210
         versionName "2.2.1"
@@ -65,14 +74,20 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    // 24.x 的 play-services-ads 要求 minSdk 21，降级到支持 API 19 的 20.6.0
-    implementation 'com.google.android.gms:play-services-ads:20.6.0'
-    // 1.6.x 之后的 coroutines 主要针对 API 21+，保留支持 API 19 的稳定版本
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
+    // core-ktx 1.7.0 起要求 minSdk 21，目标为 Android 5.0 后可以直接使用
+    implementation 'androidx.core:core-ktx:1.7.0'
+    // material 1.5.0 起要求 minSdk 21，目标为 Android 5.0 后可以直接使用
+    implementation 'com.google.android.material:material:1.5.0'
+    // play-services-ads 21.x 起要求 minSdk 21，目标为 Android 5.0 后可升级回原版配置
+    implementation 'com.google.android.gms:play-services-ads:24.1.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    // Firebase 依赖（crashlytics/analytics）会把 minSdk 抬升到 21+，Android 4.4.4 不支持，故移除。
-    // 保留 Crashlytics 风格的崩溃日志上报能力的最小替代：仅使用 Android Log。
+    // Firebase（crashlytics/analytics）最低要求 minSdk 21，Android 5.0 恰好满足，恢复原版配置。
+    // 注意：仍不能启用 core library desugaring，因为 java.time API backport 仅支持 API >= 24。
+    if (firebaseConfigured) {
+        implementation platform('com.google.firebase:firebase-bom:32.8.1')
+        implementation 'com.google.firebase:firebase-crashlytics'
+        implementation 'com.google.firebase:firebase-analytics'
+    }
 }
