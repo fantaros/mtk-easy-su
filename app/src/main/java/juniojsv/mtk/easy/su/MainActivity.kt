@@ -50,7 +50,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         binding.mLog.makeScrollableInsideScrollView()
 
-        // Build.VERSION.SECURITY_PATCH 仅在 API 23+ 可用，Android 4.4.4 上跳过此检查
+        // Build.VERSION.SECURITY_PATCH 仅在 API 23+ 可用；最低支持 Android 5.0 (API 21)，
+        // 因此仍需运行时守卫：在 5.0/5.1 上跳过安全补丁检查（Kotlin && 短路求值保证不会读取该字段）
         val securityPatchOk = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
             Build.VERSION.SECURITY_PATCH.replace("-", "").toInt() >= 20200301
         if (securityPatchOk && !preferences.getBoolean(PREF_SECURITY_PATCH_IGNORED, false)) {
@@ -63,12 +64,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     }
                 }
                 setNegativeButton(R.string.close) { _, _ ->
-                    // finishAndRemoveTask() 需要 API 21，finishAffinity() 从 API 16 可用
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        finishAndRemoveTask()
-                    } else {
-                        finishAffinity()
-                    }
+                    // finishAndRemoveTask() 从 API 21 起可用，最低支持版本即为 Android 5.0，可直接调用
+                    finishAndRemoveTask()
                 }
                 create().apply { setCanceledOnTouchOutside(false) }
             }.show()
