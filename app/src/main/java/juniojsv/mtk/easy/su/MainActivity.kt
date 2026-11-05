@@ -5,13 +5,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.core.net.toUri
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
@@ -51,9 +50,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         binding.mLog.makeScrollableInsideScrollView()
 
-        if (Build.VERSION.SECURITY_PATCH.replace("-", "")
-                .toInt() >= 20200301 && !preferences.getBoolean(PREF_SECURITY_PATCH_IGNORED, false)
-        ) {
+        // Build.VERSION.SECURITY_PATCH 仅在 API 23+ 可用，Android 4.4.4 上跳过此检查
+        val securityPatchOk = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            Build.VERSION.SECURITY_PATCH.replace("-", "").toInt() >= 20200301
+        if (securityPatchOk && !preferences.getBoolean(PREF_SECURITY_PATCH_IGNORED, false)) {
             AlertDialog.Builder(this).run {
                 setTitle(R.string.warning_word)
                 setMessage(R.string.security_patch_warning)
@@ -63,7 +63,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     }
                 }
                 setNegativeButton(R.string.close) { _, _ ->
-                    finishAndRemoveTask()
+                    // finishAndRemoveTask() 需要 API 21，finishAffinity() 从 API 16 可用
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        finishAndRemoveTask()
+                    } else {
+                        finishAffinity()
+                    }
                 }
                 create().apply { setCanceledOnTouchOutside(false) }
             }.show()
@@ -94,7 +99,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         binding.root, true, getString(R.string.download)
                     ) {
                         startActivity(Intent(Intent.ACTION_VIEW).apply {
-                            data = update.url.toUri()
+                            data = Uri.parse(update.url)
                         })
                     }
                 }
@@ -131,19 +136,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         binding.mButtonDonate.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
-                data = getString(R.string.donate_url).toUri()
+                data = Uri.parse(getString(R.string.donate_url))
             })
         }
 
         binding.mButtonGithub.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
-                data = getString(R.string.github_url).toUri()
+                data = Uri.parse(getString(R.string.github_url))
             })
         }
 
         binding.mButtonXda.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
-                data = getString(R.string.xda_url).toUri()
+                data = Uri.parse(getString(R.string.xda_url))
             })
         }
 
