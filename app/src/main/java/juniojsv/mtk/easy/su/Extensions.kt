@@ -1,6 +1,8 @@
 package juniojsv.mtk.easy.su
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
 import android.text.method.ScrollingMovementMethod
 import android.view.MotionEvent
 import android.view.View
@@ -32,6 +34,20 @@ fun Process.getOutput(): String {
 
 fun String.toast(context: Context, long: Boolean = false) =
     Toast.makeText(context, this, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+
+/**
+ * Android 4.4.4 (API 19) 兼容的 SharedPreferences 提交/应用方法：
+ * commit()/apply() 从 API 9 起即可用，这里做版本保护以便在旧系统上安全调用。
+ */
+fun SharedPreferences.edit(commit: Boolean = false, action: SharedPreferences.Editor.() -> Unit) {
+    val editor = edit()
+    editor.action()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+        if (commit) editor.commit() else editor.apply()
+    } else {
+        editor.commit()
+    }
+}
 
 fun String.snack(
     view: View,

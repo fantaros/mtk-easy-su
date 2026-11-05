@@ -50,7 +50,7 @@
                             style="@style/CustomCardViewDeveloperImage"
                             android:background="@color/primaryColor"
                             android:contentDescription="@string/todo"
-                            android:tint="@android:color/background_light"
+                            app:tint="@android:color/background_light"
                             app:srcCompat="@mipmap/johnwu_img" />
 
                         <TextView
@@ -70,7 +70,7 @@
                             style="@style/CustomCardViewDeveloperImage"
                             android:background="@color/primaryColor"
                             android:contentDescription="@string/todo"
-                            android:tint="@android:color/white"
+                            app:tint="@android:color/white"
                             app:srcCompat="@drawable/ic_person_black_24dp" />
 
                         <TextView
@@ -90,7 +90,7 @@
                             style="@style/CustomCardViewDeveloperImage"
                             android:background="@color/primaryColor"
                             android:contentDescription="@string/todo"
-                            android:tint="@android:color/white"
+                            app:tint="@android:color/white"
                             app:srcCompat="@drawable/ic_person_black_24dp" />
 
                         <TextView
